@@ -13,6 +13,7 @@
     "postinstall": "prisma generate",
     "db:up": "docker compose up -d",
     "db:push": "prisma db push",
+    "db:push:neon": "node scripts/db-push-neon.cjs",
     "db:studio": "prisma studio",
     "cap:sync": "npx cap sync",
     "cap:open": "npx cap open android",
