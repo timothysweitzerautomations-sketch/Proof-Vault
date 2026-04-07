@@ -1,0 +1,8 @@
+# Next.js runs on Vercel; Capacitor/Android stays local — keep upload tiny (CLI limit ~10MB).
+android
+node_modules
+.next
+uploads
+www
+.env
+.env*.local

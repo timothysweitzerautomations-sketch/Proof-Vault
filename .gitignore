@@ -50,3 +50,4 @@ android/capacitor-cordova-android-plugins
 android/local.properties
 android/gradle-dist/
 android/.gradle-home/
+.vercel
