@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { auth } from "@/auth";
+import { auth, signIn } from "@/auth";
 import { redirect } from "next/navigation";
 import { LogoMark } from "@/components/LogoMark";
 
@@ -70,6 +69,17 @@ function authErrorHint(code: string | undefined): string | null {
 
 const ring = "outline-none ring-vault-500/30 focus:ring-2 focus:ring-offset-2 focus:ring-offset-white";
 
+/** Auth.js v5 does not support GET /api/auth/signin/[provider] (it throws and surfaces as error=Configuration). Use POST via signIn(). */
+async function signInWithGoogleAction() {
+  "use server";
+  await signIn("google", { redirectTo: postLoginRedirect() });
+}
+
+async function signInWithGitHubAction() {
+  "use server";
+  await signIn("github", { redirectTo: postLoginRedirect() });
+}
+
 export default async function LoginPage({
   searchParams,
 }: {
@@ -117,22 +127,24 @@ export default async function LoginPage({
         </div>
         <div className="relative mt-8 space-y-3">
           {showGoogle ? (
-            <Link
-              href={`/api/auth/signin/google?callbackUrl=${encodeURIComponent(postLoginRedirect())}`}
-              className={`flex w-full items-center justify-center rounded-full bg-gradient-to-b from-vault-600 to-vault-700 py-3 text-sm font-semibold text-white shadow-md shadow-vault-900/20 transition hover:from-vault-500 hover:to-vault-600 ${ring}`}
-              prefetch={false}
-            >
-              Continue with Google
-            </Link>
+            <form action={signInWithGoogleAction} className="block">
+              <button
+                type="submit"
+                className={`flex w-full items-center justify-center rounded-full bg-gradient-to-b from-vault-600 to-vault-700 py-3 text-sm font-semibold text-white shadow-md shadow-vault-900/20 transition hover:from-vault-500 hover:to-vault-600 ${ring}`}
+              >
+                Continue with Google
+              </button>
+            </form>
           ) : null}
           {showGitHub ? (
-            <Link
-              href={`/api/auth/signin/github?callbackUrl=${encodeURIComponent(postLoginRedirect())}`}
-              className={`flex w-full items-center justify-center rounded-full border border-slate-200 bg-white py-3 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50 ${ring}`}
-              prefetch={false}
-            >
-              Continue with GitHub
-            </Link>
+            <form action={signInWithGitHubAction} className="block">
+              <button
+                type="submit"
+                className={`flex w-full items-center justify-center rounded-full border border-slate-200 bg-white py-3 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50 ${ring}`}
+              >
+                Continue with GitHub
+              </button>
+            </form>
           ) : null}
           {noOAuth ? (
             <div className="space-y-3 rounded-xl border border-amber-200/80 bg-amber-50/90 px-4 py-4 text-left text-sm text-amber-950">
