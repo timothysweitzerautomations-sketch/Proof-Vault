@@ -10,19 +10,61 @@ function postLoginRedirect() {
   return "/";
 }
 
+function authPublicBaseUrl(): string {
+  return (
+    process.env.AUTH_URL?.trim().replace(/\/$/, "") ??
+    process.env.NEXTAUTH_URL?.trim().replace(/\/$/, "") ??
+    ""
+  );
+}
+
+/** True when the app is clearly running on Vercel or another HTTPS deployment (not local dev). */
+function isLikelyDeployed(): boolean {
+  if (process.env.VERCEL === "1") return true;
+  const url = authPublicBaseUrl();
+  return (
+    url.startsWith("https://") &&
+    !url.includes("localhost") &&
+    !url.includes("127.0.0.1")
+  );
+}
+
 function authErrorHint(code: string | undefined): string | null {
   if (!code) return null;
+  const deployed = isLikelyDeployed();
+
   switch (code) {
-    case "Configuration":
-      return "Sign-in failed on the server (Auth.js reports this generically). Common causes: PostgreSQL not running or wrong DATABASE_URL, missing or invalid AUTH_SECRET, or an OAuth step that lost session cookies (try a normal browser tab at http://localhost:3000/login, not an embedded preview). Check the terminal running `npm run dev` for `[auth]` lines.";
+    case "Configuration": {
+      const base = authPublicBaseUrl();
+      const callbackHint =
+        base && !base.includes("localhost") && !base.includes("127.0.0.1")
+          ? `${base}/api/auth/callback/google`
+          : "https://YOUR_HOST/api/auth/callback/google";
+      return deployed
+        ? `Sign-in failed on the server (Auth.js labels this “Configuration”). On Vercel, open the deployment → Logs and check the failing /api/auth/ request. In Project Settings → Environment Variables, confirm DATABASE_URL (Neon / Postgres), AUTH_SECRET, AUTH_URL (or NEXTAUTH_URL) matching this site’s HTTPS origin, and your OAuth client ID/secret. In Google/GitHub OAuth settings, add this site’s callback URL (for Google, e.g. ${callbackHint}). If you use an app WebView, also try signing in from a normal mobile browser to compare.`
+        : "Sign-in failed on the server (Auth.js reports this generically). Common causes: PostgreSQL not running or wrong DATABASE_URL, missing or invalid AUTH_SECRET, or an OAuth step that lost session cookies (try a normal browser tab at http://localhost:3000/login, not an embedded preview). Check the terminal running `npm run dev` for `[auth]` lines.";
+    }
     case "AdapterError":
-      return "Signing in failed while talking to the database. Start PostgreSQL (`brew services start postgresql@16` or `npm run db:up`), run `npx prisma db push`, then try again.";
+      return deployed
+        ? "Signing in failed while talking to the database. In Vercel → Environment Variables, verify DATABASE_URL reaches your hosted Postgres (Neon connection string, pooling if required). Check the function logs for Prisma or connection errors."
+        : "Signing in failed while talking to the database. Start PostgreSQL (`brew services start postgresql@16` or `npm run db:up`), run `npx prisma db push`, then try again.";
     case "AccessDenied":
       return "Sign-in was denied. Try again, or use a different Google account.";
-    case "OAuthCallbackError":
-      return "Google could not complete sign-in (often wrong client secret, redirect URI mismatch in Google Cloud Console, or a cancelled login). Verify OAuth credentials and authorized redirect URIs for http://localhost:3000, then try again.";
+    case "OAuthCallbackError": {
+      const base = authPublicBaseUrl();
+      const googleCallback =
+        base && !base.includes("localhost") && !base.includes("127.0.0.1")
+          ? `${base}/api/auth/callback/google`
+          : "http://localhost:3000/api/auth/callback/google";
+      const prodNote = deployed
+        ? ` In Google Cloud Console / GitHub OAuth app settings, authorized redirect URIs must include ${googleCallback} (and the GitHub equivalent with /api/auth/callback/github).`
+        : ` Verify OAuth credentials and authorized redirect URIs for ${googleCallback} (and production URLs when deployed).`;
+      return `The provider could not complete sign-in (wrong client secret, redirect URI mismatch, or a cancelled login).${prodNote}`;
+    }
     default:
-      return `Sign-in could not finish (${code}). Try again, or check the terminal where Next.js is running.`;
+      return deployed
+        ? `Sign-in could not finish (${code}). Check Vercel function logs for /api/auth/ and verify environment variables.`
+        : `Sign-in could not finish (${code}). Try again, or check the terminal where Next.js is running.`;
   }
 }
 
