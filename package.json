@@ -1,0 +1,51 @@
+{
+  "name": "proof-vault",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack --hostname 0.0.0.0 --port 3000",
+    "android:reverse": "adb reverse tcp:3000 tcp:3000",
+    "dev:android-usb": "adb reverse tcp:3000 tcp:3000 || true; next dev --turbopack --hostname 0.0.0.0 --port 3000",
+    "android:start": "bash scripts/start-for-android.sh",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "postinstall": "prisma generate",
+    "db:up": "docker compose up -d",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "cap:sync": "npx cap sync",
+    "cap:open": "npx cap open android",
+    "android:build-apk": "npm run cap:sync && cd android && ./gradlew assembleDebug",
+    "android:install-apk": "adb install -r android/app/build/outputs/apk/debug/app-debug.apk",
+    "android:apk": "bash scripts/build-and-install-apk.sh",
+    "android:apk:prod": "bash scripts/build-production-apk.sh",
+    "android:build-terminal": "bash scripts/run-android-build-terminal.sh"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.2.0",
+    "@capacitor/core": "^7.2.0",
+    "@auth/prisma-adapter": "^2.11.1",
+    "@prisma/client": "^6.19.0",
+    "@vercel/blob": "^0.27.3",
+    "next": "^15.5.4",
+    "next-auth": "^5.0.0-beta.30",
+    "pdf-lib": "^1.17.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "resend": "^4.8.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.2.0",
+    "@eslint/eslintrc": "^3.3.0",
+    "@types/node": "^20.19.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "eslint": "^9.25.0",
+    "eslint-config-next": "^15.5.4",
+    "postcss": "^8.5.0",
+    "prisma": "^6.19.0",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.8.0"
+  }
+}
