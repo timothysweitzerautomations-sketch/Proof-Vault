@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import { formatLocaleCalendarDate } from "@/lib/calendar-date";
 import { prisma } from "@/lib/prisma";
 import { formatMoney } from "@/lib/money";
 import { readUploadBuffer } from "@/lib/storage";
@@ -47,7 +48,7 @@ export async function GET(
   draw("Proof Vault — claim packet", 18, true, 28);
   draw(`Generated: ${new Date().toLocaleString()}`, 10, false, 22);
   draw(`Merchant: ${receipt.merchant}`, 12, true, 20);
-  draw(`Purchase date: ${receipt.purchasedAt.toLocaleDateString()}`, 11, false, 18);
+  draw(`Purchase date: ${formatLocaleCalendarDate(receipt.purchasedAt)}`, 11, false, 18);
   draw(`Total: ${formatMoney(receipt.totalCents, receipt.currency)}`, 11, false, 18);
   if (receipt.supportUrl) draw(`Support / claim URL: ${receipt.supportUrl}`, 10, false, 18);
   if (receipt.notes) draw(`Notes: ${receipt.notes}`, 10, false, 18);
@@ -56,7 +57,7 @@ export async function GET(
   draw("Coverage", 12, true, 20);
   if (receipt.coverage) {
     draw(
-      `Starts: ${receipt.coverage.startsAt.toLocaleDateString()} · Ends: ${receipt.coverage.endsAt.toLocaleDateString()} (${receipt.coverage.type})`,
+      `Starts: ${formatLocaleCalendarDate(receipt.coverage.startsAt)} · Ends: ${formatLocaleCalendarDate(receipt.coverage.endsAt)} (${receipt.coverage.type})`,
       10,
       false,
       18

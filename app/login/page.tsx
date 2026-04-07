@@ -1,5 +1,6 @@
 import { auth, signIn } from "@/auth";
 import { redirect } from "next/navigation";
+import { LogoMark } from "@/components/LogoMark";
 
 /** Match post-login redirect to AUTH_URL so we never mix localhost vs 127.0.0.1 cookies. */
 function postLoginRedirect() {
@@ -24,6 +25,8 @@ function authErrorHint(code: string | undefined): string | null {
   }
 }
 
+const ring = "outline-none ring-vault-500/30 focus:ring-2 focus:ring-offset-2 focus:ring-offset-white";
+
 export default async function LoginPage({
   searchParams,
 }: {
@@ -46,85 +49,77 @@ export default async function LoginPage({
   const noOAuth = !showGoogle && !showGitHub;
 
   return (
-    <div className="mx-auto max-w-sm space-y-6 rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
-      <div>
-        <h1 className="text-xl font-semibold text-zinc-900">Sign in</h1>
-        <p className="mt-2 text-sm text-zinc-600">
-          {noOAuth
-            ? "Sign-in is turned off until OAuth keys are added on the Mac that runs the app server."
-            : "Your receipts stay on your account. Sign in with the provider you use."}
-        </p>
-        {errorHint ? (
-          <div
-            className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-3 text-sm text-red-900"
-            role="alert"
-          >
-            {errorHint}
-          </div>
-        ) : null}
-      </div>
-      <div className="space-y-3">
-        {showGoogle ? (
-          <form
-            action={async () => {
-              "use server";
-              await signIn("google", { redirectTo: postLoginRedirect() });
-            }}
-          >
-            <button
-              type="submit"
-              className="w-full rounded-full bg-zinc-900 py-2.5 text-sm font-medium text-white hover:bg-zinc-800"
+    <div className="mx-auto max-w-md space-y-8">
+      <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white/95 p-8 shadow-card sm:p-10">
+        <div className="pointer-events-none absolute -right-6 -top-6 h-28 w-28 rounded-full bg-vault-400/20 blur-2xl" />
+        <div className="relative text-center">
+          <LogoMark className="mx-auto h-14 w-14 shadow-lg shadow-vault-900/15" />
+          <h1 className="mt-5 text-2xl font-semibold tracking-tight text-slate-900">Welcome back</h1>
+          <p className="mt-2 text-sm leading-relaxed text-slate-600">
+            {noOAuth
+              ? "Sign-in is turned off until OAuth keys are added on the Mac that runs the app server."
+              : "Receipts stay tied to your account. Pick a provider to continue."}
+          </p>
+          {errorHint ? (
+            <div
+              className="mt-5 rounded-xl border border-red-200 bg-red-50/90 px-4 py-3 text-left text-sm text-red-900"
+              role="alert"
             >
-              Continue with Google
-            </button>
-          </form>
-        ) : null}
-        {showGitHub ? (
-          <form
-            action={async () => {
-              "use server";
-              await signIn("github", { redirectTo: postLoginRedirect() });
-            }}
-          >
-            <button
-              type="submit"
-              className="w-full rounded-full border border-zinc-300 bg-white py-2.5 text-sm font-medium text-zinc-900 hover:bg-zinc-50"
+              {errorHint}
+            </div>
+          ) : null}
+        </div>
+        <div className="relative mt-8 space-y-3">
+          {showGoogle ? (
+            <form
+              action={async () => {
+                "use server";
+                await signIn("google", { redirectTo: postLoginRedirect() });
+              }}
             >
-              Continue with GitHub
-            </button>
-          </form>
-        ) : null}
-        {noOAuth ? (
-          <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-950">
-            <p>
-              On your Mac, open the project&apos;s <code className="text-xs">.env</code>{" "}
-              file. Set real values for{" "}
-              <code className="rounded bg-amber-100/80 px-1 text-xs">
-                AUTH_GOOGLE_ID
-              </code>{" "}
-              and{" "}
-              <code className="rounded bg-amber-100/80 px-1 text-xs">
-                AUTH_GOOGLE_SECRET
-              </code>
-              , or GitHub <code className="text-xs">AUTH_GITHUB_ID</code> /{" "}
-              <code className="text-xs">AUTH_GITHUB_SECRET</code>.
-            </p>
-            <p>
-              Create the client under Google Cloud → APIs &amp; Services →
-              Credentials. Pick the <strong>Web application</strong> client type
-              (not Android). Add redirect URLs such as{" "}
-              <code className="break-all text-xs">
-                http://127.0.0.1:3000/api/auth/callback/google
-              </code>
-              .
-            </p>
-            <p>
-              Save <code className="text-xs">.env</code>, then on the Mac run{" "}
-              <code className="text-xs">npm run dev</code> again. Keep USB reverse
-              if you use the phone over USB.
-            </p>
-          </div>
-        ) : null}
+              <button
+                type="submit"
+                className={`w-full rounded-full bg-gradient-to-b from-vault-600 to-vault-700 py-3 text-sm font-semibold text-white shadow-md shadow-vault-900/20 transition hover:from-vault-500 hover:to-vault-600 ${ring}`}
+              >
+                Continue with Google
+              </button>
+            </form>
+          ) : null}
+          {showGitHub ? (
+            <form
+              action={async () => {
+                "use server";
+                await signIn("github", { redirectTo: postLoginRedirect() });
+              }}
+            >
+              <button
+                type="submit"
+                className={`w-full rounded-full border border-slate-200 bg-white py-3 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50 ${ring}`}
+              >
+                Continue with GitHub
+              </button>
+            </form>
+          ) : null}
+          {noOAuth ? (
+            <div className="space-y-3 rounded-xl border border-amber-200/80 bg-amber-50/90 px-4 py-4 text-left text-sm text-amber-950">
+              <p>
+                On your Mac, open the project&apos;s <code className="text-xs">.env</code> file. Set real values for{" "}
+                <code className="rounded bg-amber-100/90 px-1 text-xs">AUTH_GOOGLE_ID</code> and{" "}
+                <code className="rounded bg-amber-100/90 px-1 text-xs">AUTH_GOOGLE_SECRET</code>, or GitHub{" "}
+                <code className="text-xs">AUTH_GITHUB_ID</code> / <code className="text-xs">AUTH_GITHUB_SECRET</code>.
+              </p>
+              <p>
+                Create the client under Google Cloud → APIs &amp; Services → Credentials. Pick the <strong>Web application</strong> client type
+                (not Android). Add redirect URLs such as{" "}
+                <code className="break-all text-xs">http://127.0.0.1:3000/api/auth/callback/google</code>.
+              </p>
+              <p>
+                Save <code className="text-xs">.env</code>, then on the Mac run <code className="text-xs">npm run dev</code> again. Keep USB reverse
+                if you use the phone over USB.
+              </p>
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );

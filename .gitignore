@@ -34,6 +34,7 @@ yarn-error.log*
 # env
 .env
 .env*.local
+.env.vercel.pull
 .env.neon
 
 # prisma

@@ -1,3 +1,4 @@
+import { formatLocaleCalendarDate } from "@/lib/calendar-date";
 import { prisma } from "@/lib/prisma";
 import { daysUntilUtc, utcDateKey } from "@/lib/dates";
 import { Resend } from "resend";
@@ -79,7 +80,7 @@ export async function GET(request: Request) {
       const html = `
         <p>Hi${receipt.user.name ? ` ${receipt.user.name.split(" ")[0]}` : ""},</p>
         <p>Your coverage for <strong>${receipt.merchant}</strong> ends on
-        <strong>${receipt.coverage.endsAt.toLocaleDateString()}</strong>
+        <strong>${formatLocaleCalendarDate(receipt.coverage.endsAt)}</strong>
         (about <strong>${reminder.offsetDays}</strong> days from the day this reminder is sent).</p>
         <p><a href="${link}">Open this receipt in Proof Vault</a></p>
         <p style="color:#666;font-size:12px">You get one email per reminder offset per coverage end date.</p>

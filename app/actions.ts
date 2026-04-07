@@ -3,7 +3,8 @@
 import { prisma } from "@/lib/prisma";
 import { parseMoneyToCents } from "@/lib/money";
 import { storeUpload, removeUpload } from "@/lib/storage";
-import { addMonths, addYears } from "@/lib/dates";
+import { addDaysUtc, addMonths, addYears } from "@/lib/dates";
+import { parseDateFormValue } from "@/lib/calendar-date";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUserId } from "@/lib/session";
@@ -18,13 +19,10 @@ function warrantyEndFromPreset(
 ): Date | null {
   if (preset === "none") return null;
   if (preset === "custom" && customEnd) {
-    const d = new Date(customEnd);
-    return Number.isNaN(d.getTime()) ? null : d;
+    return parseDateFormValue(customEnd);
   }
   if (preset === "90d") {
-    const d = new Date(purchasedAt);
-    d.setDate(d.getDate() + 90);
-    return d;
+    return addDaysUtc(purchasedAt, 90);
   }
   if (preset === "1y") return addYears(purchasedAt, 1);
   if (preset === "2y") return addYears(purchasedAt, 2);
@@ -53,8 +51,8 @@ export async function createReceipt(formData: FormData) {
   }
 
   const purchasedAtRaw = String(formData.get("purchasedAt") ?? "");
-  const purchasedAt = new Date(purchasedAtRaw);
-  if (Number.isNaN(purchasedAt.getTime())) {
+  const purchasedAt = parseDateFormValue(purchasedAtRaw);
+  if (!purchasedAt) {
     throw new Error("Purchase date is invalid.");
   }
 
@@ -143,8 +141,8 @@ export async function updateReceipt(receiptId: string, formData: FormData): Prom
   if (!merchant) throw new Error("Merchant is required.");
 
   const purchasedAtRaw = String(formData.get("purchasedAt") ?? "");
-  const purchasedAt = new Date(purchasedAtRaw);
-  if (Number.isNaN(purchasedAt.getTime())) throw new Error("Purchase date is invalid.");
+  const purchasedAt = parseDateFormValue(purchasedAtRaw);
+  if (!purchasedAt) throw new Error("Purchase date is invalid.");
 
   const currency = String(formData.get("currency") ?? "USD").trim() || "USD";
   const totalCents = parseMoneyToCents(String(formData.get("total") ?? ""));
@@ -153,8 +151,8 @@ export async function updateReceipt(receiptId: string, formData: FormData): Prom
 
   const coverageStartsRaw = String(formData.get("coverageStarts") ?? "");
   const coverageEndsRaw = String(formData.get("coverageEnds") ?? "");
-  const coverageStarts = new Date(coverageStartsRaw);
-  const coverageEnds = new Date(coverageEndsRaw);
+  const coverageStarts = parseDateFormValue(coverageStartsRaw);
+  const coverageEnds = parseDateFormValue(coverageEndsRaw);
   const coverageType = String(formData.get("coverageType") ?? "unknown").trim() || "unknown";
 
   const reminderOffsets = parseReminderOffsets(formData);
@@ -173,7 +171,7 @@ export async function updateReceipt(receiptId: string, formData: FormData): Prom
     });
 
     const existingCoverage = await tx.coverage.findUnique({ where: { receiptId } });
-    if (!Number.isNaN(coverageStarts.getTime()) && !Number.isNaN(coverageEnds.getTime())) {
+    if (coverageStarts && coverageEnds) {
       if (existingCoverage) {
         await tx.coverage.update({
           where: { receiptId },
