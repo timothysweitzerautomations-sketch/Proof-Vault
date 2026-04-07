@@ -56,7 +56,10 @@ export default async function HomePage() {
 
       {enriched.length === 0 ? (
         <div className="relative overflow-hidden rounded-2xl border-2 border-dashed border-vault-300/60 bg-white/60 px-6 py-14 text-center shadow-card sm:py-16">
-          <LogoMark className="mx-auto h-14 w-14 opacity-90 shadow-md shadow-vault-900/10" />
+          <LogoMark
+            gradientId="pv-logo-inbox"
+            className="mx-auto h-14 w-14 opacity-90 shadow-md shadow-vault-900/10"
+          />
           <p className="mt-5 text-lg font-medium text-slate-800">Nothing in your vault yet</p>
           <p className="mx-auto mt-2 max-w-sm text-sm text-slate-600">
             Snap a photo or upload a PDF — we will track coverage dates alongside the proof.

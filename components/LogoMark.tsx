@@ -1,5 +1,12 @@
 /** Inline mark matching the app icon — shield + folded receipt. */
-export function LogoMark({ className = "h-8 w-8" }: { className?: string }) {
+export function LogoMark({
+  className = "h-8 w-8",
+  gradientId = "pv-logo-grad",
+}: {
+  className?: string;
+  /** Unique per page — duplicate SVG ids break some WebViews when header + body both show the mark. */
+  gradientId?: string;
+}) {
   return (
     <svg
       className={className}
@@ -9,12 +16,19 @@ export function LogoMark({ className = "h-8 w-8" }: { className?: string }) {
       aria-hidden
     >
       <defs>
-        <linearGradient id="logoGrad" x1="4" y1="4" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+        <linearGradient
+          id={gradientId}
+          x1="4"
+          y1="4"
+          x2="28"
+          y2="28"
+          gradientUnits="userSpaceOnUse"
+        >
           <stop stopColor="#14b8a6" />
           <stop offset="1" stopColor="#0f766e" />
         </linearGradient>
       </defs>
-      <rect width="32" height="32" rx="8" fill="url(#logoGrad)" />
+      <rect width="32" height="32" rx="8" fill={`url(#${gradientId})`} />
       <path
         fill="white"
         fillOpacity="0.95"

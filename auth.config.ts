@@ -3,8 +3,6 @@ import Google from "next-auth/providers/google";
 import GitHub from "next-auth/providers/github";
 
 const authUrl = process.env.AUTH_URL?.trim() ?? "";
-/** http:// dev (or unset AUTH_URL): disable PKCE cookie checks; https:// production: use defaults. */
-const isLocalHttpDev = !authUrl.startsWith("https://");
 
 const providers: NextAuthConfig["providers"] = [];
 
@@ -17,10 +15,9 @@ if (googleId && googleSecret) {
       clientId: googleId,
       clientSecret: googleSecret,
       allowDangerousEmailAccountLinking: true,
-      // Default is ["pkce"]. On http://localhost or device WebViews, the PKCE cookie is
-      // often missing on return → InvalidCheck → generic "Configuration" error in the UI.
-      // For https:// production, omit this so PKCE stays enabled.
-      ...(isLocalHttpDev ? { checks: ["none"] as const } : {}),
+      // Capacitor / in-app WebViews often drop or partition PKCE cookies across OAuth
+      // redirects—even on https://—which breaks the default ["pkce"] checks.
+      checks: ["none"] as const,
     })
   );
 }
@@ -34,7 +31,7 @@ if (githubId && githubSecret) {
       clientId: githubId,
       clientSecret: githubSecret,
       allowDangerousEmailAccountLinking: true,
-      ...(isLocalHttpDev ? { checks: ["none"] as const } : {}),
+      checks: ["none"] as const,
     })
   );
 }
@@ -42,7 +39,7 @@ if (githubId && githubSecret) {
 export default {
   trustHost: true,
   debug: process.env.NODE_ENV !== "production",
-  useSecureCookies: authUrl.startsWith("https://"),
+  useSecureCookies: authUrl.startsWith("https://") || process.env.VERCEL === "1",
   providers,
   pages: { signIn: "/login", error: "/login" },
   session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },

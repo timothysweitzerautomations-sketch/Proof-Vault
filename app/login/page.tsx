@@ -1,4 +1,5 @@
-import { auth, signIn } from "@/auth";
+import Link from "next/link";
+import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { LogoMark } from "@/components/LogoMark";
 
@@ -53,7 +54,10 @@ export default async function LoginPage({
       <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white/95 p-8 shadow-card sm:p-10">
         <div className="pointer-events-none absolute -right-6 -top-6 h-28 w-28 rounded-full bg-vault-400/20 blur-2xl" />
         <div className="relative text-center">
-          <LogoMark className="mx-auto h-14 w-14 shadow-lg shadow-vault-900/15" />
+          <LogoMark
+            gradientId="pv-logo-login"
+            className="mx-auto h-14 w-14 shadow-lg shadow-vault-900/15"
+          />
           <h1 className="mt-5 text-2xl font-semibold tracking-tight text-slate-900">Welcome back</h1>
           <p className="mt-2 text-sm leading-relaxed text-slate-600">
             {noOAuth
@@ -71,34 +75,22 @@ export default async function LoginPage({
         </div>
         <div className="relative mt-8 space-y-3">
           {showGoogle ? (
-            <form
-              action={async () => {
-                "use server";
-                await signIn("google", { redirectTo: postLoginRedirect() });
-              }}
+            <Link
+              href={`/api/auth/signin/google?callbackUrl=${encodeURIComponent(postLoginRedirect())}`}
+              className={`flex w-full items-center justify-center rounded-full bg-gradient-to-b from-vault-600 to-vault-700 py-3 text-sm font-semibold text-white shadow-md shadow-vault-900/20 transition hover:from-vault-500 hover:to-vault-600 ${ring}`}
+              prefetch={false}
             >
-              <button
-                type="submit"
-                className={`w-full rounded-full bg-gradient-to-b from-vault-600 to-vault-700 py-3 text-sm font-semibold text-white shadow-md shadow-vault-900/20 transition hover:from-vault-500 hover:to-vault-600 ${ring}`}
-              >
-                Continue with Google
-              </button>
-            </form>
+              Continue with Google
+            </Link>
           ) : null}
           {showGitHub ? (
-            <form
-              action={async () => {
-                "use server";
-                await signIn("github", { redirectTo: postLoginRedirect() });
-              }}
+            <Link
+              href={`/api/auth/signin/github?callbackUrl=${encodeURIComponent(postLoginRedirect())}`}
+              className={`flex w-full items-center justify-center rounded-full border border-slate-200 bg-white py-3 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50 ${ring}`}
+              prefetch={false}
             >
-              <button
-                type="submit"
-                className={`w-full rounded-full border border-slate-200 bg-white py-3 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50 ${ring}`}
-              >
-                Continue with GitHub
-              </button>
-            </form>
+              Continue with GitHub
+            </Link>
           ) : null}
           {noOAuth ? (
             <div className="space-y-3 rounded-xl border border-amber-200/80 bg-amber-50/90 px-4 py-4 text-left text-sm text-amber-950">

@@ -41,7 +41,10 @@ export default async function RootLayout({
               href="/"
               className={`group flex items-center gap-2.5 rounded-lg text-lg font-semibold tracking-tight text-slate-900 ${focusRing}`}
             >
-              <LogoMark className="h-9 w-9 shadow-sm shadow-vault-900/10 transition group-hover:scale-[1.02]" />
+              <LogoMark
+                gradientId="pv-logo-header"
+                className="h-9 w-9 shadow-sm shadow-vault-900/10 transition group-hover:scale-[1.02]"
+              />
               <span className="bg-gradient-to-r from-vault-900 to-vault-600 bg-clip-text text-transparent">
                 Proof Vault
               </span>
