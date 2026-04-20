@@ -208,6 +208,39 @@ This sets the WebView to **`ORIGIN`** (see `capacitor.config.ts`: `https://` in 
 5. Resend: verify a domain for real `EMAIL_FROM`.
 6. Cron: see §8 above.
 
+## Production smoke test (after every deploy)
+
+Use your real **Production** URL. Current example: **`https://proof-vault-delta.vercel.app`**. In the checklist below, `ORIGIN` means that URL with **no trailing slash**.
+
+### Vercel env (Production)
+
+| Variable | Must match |
+|----------|------------|
+| `AUTH_URL` | `ORIGIN` (no trailing slash) |
+| `APP_URL` | Same as `AUTH_URL` unless emails need a different public URL |
+| `AUTH_SECRET` | Set (e.g. `openssl rand -base64 32`) |
+| `DATABASE_URL` | Production Postgres |
+| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | Web OAuth client (if using Google) |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob — **required** for durable uploads on serverless |
+
+### Google Cloud Console (Web client)
+
+- **Authorized JavaScript origins:** `ORIGIN`
+- **Authorized redirect URIs:** `ORIGIN/api/auth/callback/google`
+
+If the OAuth consent screen is in **Testing**, add your Google account under **Test users**.
+
+### Manual checks (about 5 minutes)
+
+1. Open `ORIGIN` in a private window → **Continue with Google** → you land on **Inbox**.
+2. **Add receipt** → attach a small **PDF or image** → save → file opens/downloads and row appears in Inbox.
+3. Use **search** + **coverage filter** → confirm counts / empty state behave as expected.
+4. Optional: trigger **cron** manually with `CRON_SECRET` (see main README §7) after you have reminders configured.
+
+## Portfolio / resume (copy-paste)
+
+**Proof Vault** — `ORIGIN` — Full-stack **Next.js 15** app with **Prisma** + **PostgreSQL**, **Auth.js** (Google), **Vercel Blob** for uploads, inbox **search and warranty filters**, reminder email pipeline, and production **error boundaries**. Deployed on **Vercel**.
+
 ## Performance note
 
 Saving receipts does **not** send email inline. The cron job batches due reminders so the UI stays responsive.
