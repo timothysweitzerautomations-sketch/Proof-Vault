@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "WATCHPACK_POLLING=true next dev --turbopack --hostname 0.0.0.0 --port 3000",
+    "dev": "WATCHPACK_POLLING=true next dev --turbopack --hostname 0.0.0.0",
     "android:reverse": "adb reverse tcp:3000 tcp:3000",
     "dev:android-usb": "adb reverse tcp:3000 tcp:3000 || true; WATCHPACK_POLLING=true next dev --turbopack --hostname 0.0.0.0 --port 3000",
     "android:start": "bash scripts/start-for-android.sh",

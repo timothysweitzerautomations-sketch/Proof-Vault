@@ -4,6 +4,9 @@ import { ArrowLeft, Link2, Package, Receipt, Shield, StickyNote } from "lucide-r
 import { createReceipt } from "@/app/actions";
 import { UsDateField } from "@/components/UsDateField";
 import { FilePickArea } from "@/components/FilePickArea";
+import { requireUserId } from "@/lib/session";
+
+export const dynamic = "force-dynamic";
 
 const label = "text-sm font-medium text-slate-700";
 const field =
@@ -31,7 +34,9 @@ function SectionCard({
   );
 }
 
-export default function NewReceiptPage() {
+export default async function NewReceiptPage() {
+  await requireUserId();
+
   return (
     <div className="mx-auto max-w-6xl">
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_17.5rem] lg:gap-10 xl:grid-cols-[minmax(0,1fr)_19rem]">

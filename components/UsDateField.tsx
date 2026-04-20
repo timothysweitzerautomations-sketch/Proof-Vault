@@ -5,7 +5,6 @@ import { CalendarDays } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { DayPicker } from "react-day-picker";
 import { enUS } from "react-day-picker/locale";
-import "react-day-picker/style.css";
 
 type Props = {
   name: string;

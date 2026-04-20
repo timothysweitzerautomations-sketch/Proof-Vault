@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { auth, signOut } from "@/auth";
 import { LogoMark } from "@/components/LogoMark";
 import "./globals.css";
+import "react-day-picker/style.css";
 
 const geist = Geist({ variable: "--font-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-mono", subsets: ["latin"] });
