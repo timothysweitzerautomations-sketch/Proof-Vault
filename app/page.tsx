@@ -4,6 +4,7 @@ import { formatLocaleCalendarDate } from "@/lib/calendar-date";
 import { daysUntil, coverageBadge } from "@/lib/dates";
 import { formatMoney } from "@/lib/money";
 import { requireUserId } from "@/lib/session";
+import { buildCoverageWhere, normalizeQuery, parseCoverageFilter } from "@/lib/receipt-filters";
 import { LogoMark } from "@/components/LogoMark";
 
 export const dynamic = "force-dynamic";
@@ -11,14 +12,39 @@ export const dynamic = "force-dynamic";
 const inputFocus =
   "outline-none ring-vault-500/25 focus:border-vault-400 focus:ring-2 focus:ring-offset-0";
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const userId = await requireUserId();
 
-  const receipts = await prisma.receipt.findMany({
-    where: { userId },
-    include: { coverage: true },
-    orderBy: { updatedAt: "desc" },
-  });
+  const sp = (await searchParams) ?? {};
+  const q = normalizeQuery(Array.isArray(sp.q) ? sp.q[0] : sp.q);
+  const coverage = parseCoverageFilter(Array.isArray(sp.coverage) ? sp.coverage[0] : sp.coverage);
+
+  const coverageWhere = buildCoverageWhere(coverage);
+  const filtersActive = q.length > 0 || coverage !== "any";
+
+  const [totalReceipts, receipts] = await Promise.all([
+    prisma.receipt.count({ where: { userId } }),
+    prisma.receipt.findMany({
+      where: {
+        userId,
+        ...(q
+          ? {
+              OR: [
+                { merchant: { contains: q, mode: "insensitive" } },
+                { notes: { contains: q, mode: "insensitive" } },
+              ],
+            }
+          : {}),
+        ...(coverageWhere ?? {}),
+      },
+      include: { coverage: true },
+      orderBy: { updatedAt: "desc" },
+    }),
+  ]);
 
   const enriched = receipts.map((r) => ({
     ...r,
@@ -31,6 +57,13 @@ export default async function HomePage() {
     if (b.daysLeft == null) return -1;
     return a.daysLeft - b.daysLeft;
   });
+
+  const countLabel =
+    enriched.length === 1 ? "1 receipt" : `${enriched.length} receipts`;
+  const filteredSummary =
+    filtersActive && totalReceipts > enriched.length
+      ? `Showing ${countLabel} of ${totalReceipts} total`
+      : countLabel;
 
   return (
     <div className="space-y-10">
@@ -52,9 +85,67 @@ export default async function HomePage() {
             New receipt
           </Link>
         </div>
+        <form className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <label className="flex-1">
+            <span className="sr-only">Search receipts</span>
+            <input
+              name="q"
+              defaultValue={q}
+              placeholder="Search merchant or notes…"
+              className={`h-11 w-full rounded-xl border border-slate-200 bg-white/90 px-4 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 ${inputFocus}`}
+            />
+          </label>
+          <label>
+            <span className="sr-only">Coverage filter</span>
+            <select
+              name="coverage"
+              defaultValue={coverage}
+              className={`h-11 w-full rounded-xl border border-slate-200 bg-white/90 px-3 text-sm text-slate-800 shadow-sm ${inputFocus}`}
+            >
+              <option value="any">All</option>
+              <option value="no_coverage">No coverage</option>
+              <option value="active">Active (30d+)</option>
+              <option value="expiring">Expiring (0–30d)</option>
+              <option value="expired">Expired</option>
+            </select>
+          </label>
+          <button
+            type="submit"
+            className={`h-11 rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 ${inputFocus}`}
+          >
+            Filter
+          </button>
+          {(q || coverage !== "any") && (
+            <Link
+              href="/"
+              className={`h-11 rounded-xl border border-slate-200 bg-white/80 px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 ${inputFocus}`}
+            >
+              Clear
+            </Link>
+          )}
+        </form>
+        {enriched.length > 0 && (
+          <p className="mt-4 text-sm text-slate-600" aria-live="polite">
+            {filteredSummary}
+          </p>
+        )}
       </div>
 
-      {enriched.length === 0 ? (
+      {enriched.length === 0 && filtersActive && totalReceipts > 0 ? (
+        <div className="relative overflow-hidden rounded-2xl border border-amber-200/80 bg-amber-50/60 px-6 py-12 text-center shadow-card sm:py-14">
+          <p className="text-lg font-medium text-slate-800">No receipts match your filters</p>
+          <p className="mx-auto mt-2 max-w-md text-sm text-slate-600">
+            Try a different search term or coverage option, or clear filters to see all {totalReceipts} receipt
+            {totalReceipts === 1 ? "" : "s"}.
+          </p>
+          <Link
+            href="/"
+            className={`mt-6 inline-flex rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 ${inputFocus}`}
+          >
+            Clear filters
+          </Link>
+        </div>
+      ) : enriched.length === 0 ? (
         <div className="relative overflow-hidden rounded-2xl border-2 border-dashed border-vault-300/60 bg-white/60 px-6 py-14 text-center shadow-card sm:py-16">
           <LogoMark
             gradientId="pv-logo-inbox"
