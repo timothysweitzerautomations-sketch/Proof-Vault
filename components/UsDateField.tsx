@@ -2,7 +2,8 @@
 
 import { formatUsFromIso, parseDateFormValue } from "@/lib/calendar-date";
 import { CalendarDays } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { DayPicker } from "react-day-picker";
 import { enUS } from "react-day-picker/locale";
 
@@ -31,6 +32,7 @@ function usTextFromPickerDay(date: Date): string {
 export function UsDateField({ name, defaultIso, required, className }: Props) {
   const id = useId();
   const rootRef = useRef<HTMLDivElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
   const [value, setValue] = useState(() => (defaultIso ? formatUsFromIso(defaultIso) : ""));
   const [open, setOpen] = useState(false);
 
@@ -38,15 +40,77 @@ export function UsDateField({ name, defaultIso, required, className }: Props) {
     setValue(defaultIso ? formatUsFromIso(defaultIso) : "");
   }, [defaultIso]);
 
+  useLayoutEffect(() => {
+    if (!open) return;
+    const root = rootRef.current;
+    const pop = popoverRef.current;
+    if (!root || !pop) return;
+
+    const place = () => {
+      const rr = root.getBoundingClientRect();
+      const margin = 10;
+      const gap = 6;
+      const popW = pop.offsetWidth || 280;
+      const popH = pop.offsetHeight || 300;
+      let left = rr.left;
+      if (left + popW + margin > window.innerWidth) {
+        left = Math.max(margin, window.innerWidth - popW - margin);
+      }
+      if (left < margin) left = margin;
+      let top = rr.bottom + gap;
+      if (top + popH + margin > window.innerHeight) {
+        top = Math.max(margin, rr.top - popH - gap);
+      }
+      if (top < margin) top = margin;
+      pop.style.left = `${Math.round(left)}px`;
+      pop.style.top = `${Math.round(top)}px`;
+    };
+
+    place();
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
+  }, [open, value]);
+
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
-      if (rootRef.current?.contains(e.target as Node)) return;
+      const t = e.target as Node;
+      if (rootRef.current?.contains(t)) return;
+      if (popoverRef.current?.contains(t)) return;
       setOpen(false);
     };
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
   }, [open]);
+
+  const popover =
+    open ? (
+      <div
+        ref={popoverRef}
+        className="fixed z-[200] w-max min-w-[min(18rem,calc(100vw-2rem))] rounded-2xl border border-slate-200/90 bg-white p-3 shadow-xl shadow-slate-900/10"
+        style={{ top: 0, left: 0 }}
+        role="dialog"
+        aria-label="Choose date"
+      >
+        <DayPicker
+          mode="single"
+          locale={enUS}
+          weekStartsOn={0}
+          selected={selectedDayFromValue(value)}
+          defaultMonth={selectedDayFromValue(value) ?? new Date()}
+          onSelect={(d) => {
+            if (d) {
+              setValue(usTextFromPickerDay(d));
+              setOpen(false);
+            }
+          }}
+        />
+      </div>
+    ) : null;
 
   return (
     <div ref={rootRef} className="relative flex w-full gap-2">
@@ -69,23 +133,7 @@ export function UsDateField({ name, defaultIso, required, className }: Props) {
       >
         <CalendarDays className="h-5 w-5" strokeWidth={1.75} />
       </button>
-      {open ? (
-        <div className="absolute left-0 top-[calc(100%+6px)] z-[100] max-w-[calc(100vw-2rem)] overflow-x-auto rounded-2xl border border-slate-200/90 bg-white p-3 shadow-xl shadow-slate-900/10">
-          <DayPicker
-            mode="single"
-            locale={enUS}
-            weekStartsOn={0}
-            selected={selectedDayFromValue(value)}
-            defaultMonth={selectedDayFromValue(value) ?? new Date()}
-            onSelect={(d) => {
-              if (d) {
-                setValue(usTextFromPickerDay(d));
-                setOpen(false);
-              }
-            }}
-          />
-        </div>
-      ) : null}
+      {typeof document !== "undefined" && popover ? createPortal(popover, document.body) : null}
     </div>
   );
 }

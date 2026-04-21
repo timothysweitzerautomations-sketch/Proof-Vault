@@ -22,14 +22,14 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 shadow-sm ring-1 ring-slate-900/[0.04]">
-      <div className="flex items-center gap-2.5 border-b border-slate-100/90 bg-gradient-to-r from-vault-50/90 via-white to-white px-5 py-3.5">
+    <section className="rounded-2xl border border-slate-200/80 bg-white/90 shadow-sm ring-1 ring-slate-900/[0.04]">
+      <div className="flex items-center gap-2.5 rounded-t-2xl border-b border-slate-100/90 bg-gradient-to-r from-vault-50/90 via-white to-white px-5 py-3.5">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-vault-700 shadow-sm ring-1 ring-vault-900/10">
           <Icon className="h-5 w-5" strokeWidth={1.75} aria-hidden />
         </span>
         <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-vault-900/80">{title}</h2>
       </div>
-      <div className="p-5 sm:p-6">{children}</div>
+      <div className="rounded-b-2xl p-5 sm:p-6">{children}</div>
     </section>
   );
 }
