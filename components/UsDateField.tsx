@@ -50,26 +50,47 @@ export function UsDateField({ name, defaultIso, required, className }: Props) {
       const rr = root.getBoundingClientRect();
       const margin = 10;
       const gap = 6;
-      const popW = pop.offsetWidth || 280;
-      const popH = pop.offsetHeight || 300;
+      const pr = pop.getBoundingClientRect();
+      const popW = pr.width || pop.offsetWidth || 280;
+      const popH = pr.height || pop.offsetHeight || 320;
       let left = rr.left;
       if (left + popW + margin > window.innerWidth) {
         left = Math.max(margin, window.innerWidth - popW - margin);
       }
       if (left < margin) left = margin;
+
+      const spaceBelow = window.innerHeight - rr.bottom - gap - margin;
+      const spaceAbove = rr.top - gap - margin;
       let top = rr.bottom + gap;
-      if (top + popH + margin > window.innerHeight) {
-        top = Math.max(margin, rr.top - popH - gap);
+      // Prefer side with more room; avoid viewport clip when height was underestimated on first paint.
+      if (popH > spaceBelow && spaceAbove >= spaceBelow) {
+        top = rr.top - popH - gap;
+      } else if (top + popH + margin > window.innerHeight) {
+        top = Math.max(margin, window.innerHeight - popH - margin);
       }
       if (top < margin) top = margin;
       pop.style.left = `${Math.round(left)}px`;
       pop.style.top = `${Math.round(top)}px`;
     };
 
+    const ro = new ResizeObserver(() => {
+      place();
+    });
+    ro.observe(pop);
+
     place();
+    let rafInner = 0;
+    const rafOuter = requestAnimationFrame(() => {
+      place();
+      rafInner = requestAnimationFrame(place);
+    });
+
     window.addEventListener("resize", place);
     window.addEventListener("scroll", place, true);
     return () => {
+      cancelAnimationFrame(rafOuter);
+      cancelAnimationFrame(rafInner);
+      ro.disconnect();
       window.removeEventListener("resize", place);
       window.removeEventListener("scroll", place, true);
     };
@@ -91,8 +112,9 @@ export function UsDateField({ name, defaultIso, required, className }: Props) {
     open ? (
       <div
         ref={popoverRef}
-        className="fixed z-[200] w-max min-w-[min(18rem,calc(100vw-2rem))] rounded-2xl border border-slate-200/90 bg-white p-3 shadow-xl shadow-slate-900/10"
-        style={{ top: 0, left: 0 }}
+        data-pv-calendar-popover
+        className="fixed z-[9999] box-border w-max min-w-[min(18rem,calc(100vw-2rem))] rounded-2xl border border-slate-200/90 bg-white p-3 shadow-xl shadow-slate-900/10"
+        style={{ top: 0, left: 0, overflow: "visible", maxHeight: "none" }}
         role="dialog"
         aria-label="Choose date"
       >
@@ -100,6 +122,7 @@ export function UsDateField({ name, defaultIso, required, className }: Props) {
           mode="single"
           locale={enUS}
           weekStartsOn={0}
+          classNames={{ months: "rdp-months !overflow-visible" }}
           selected={selectedDayFromValue(value)}
           defaultMonth={selectedDayFromValue(value) ?? new Date()}
           onSelect={(d) => {

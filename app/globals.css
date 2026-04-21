@@ -30,3 +30,13 @@ body {
   --rdp-accent-color: #0f766e;
   --rdp-accent-background-color: rgba(15, 118, 110, 0.12);
 }
+
+/* Portal popover: never clip the month grid (Tailwind / scroll parents / WebKit) */
+[data-pv-calendar-popover] {
+  overflow: visible !important;
+  max-height: none !important;
+}
+
+[data-pv-calendar-popover] .rdp-months {
+  overflow: visible !important;
+}
